@@ -1,0 +1,38 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<meta name="Author" content="Ju-Hyung Lee, jufoot@gmail.com"/>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8"/>
+<title>Collision</title>
+<link rel="stylesheet" type="text/css" href="style.css">
+</head>
+
+<body>
+  <div id="container">
+    <header>
+      <h1>GJK/EPA</h1>
+    </header>
+
+    <div id="content">
+      <div id="screen">
+        <canvas width="800" height="480" id="canvas"></canvas>
+        <div id="info"></div>
+      </div>
+    </div>
+
+    <div id="desc">
+      1-7 : change demo<br />
+      Q-E : rotate<br />
+      M : toggle minkowski differences<br />
+      S : cycle through simplex history<br />
+      P : cycle through polytope closest edge history<br />
+    </div>
+  </div>
+  
+  <script type="text/javascript" src="math.js"></script>
+  <script type="text/javascript" src="util.js"></script>
+  <script type="text/javascript" src="collision.js"></script>
+  <script type="text/javascript" src="app.js"></script>
+  <script type="text/javascript">App.main();</script>  
+</body>
+</html>
