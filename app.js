@@ -79,25 +79,25 @@ App = function() {
 		switch (m) {
 		case 0: // Line segment vs Point
 			polygonA.verts = [];
-			polygonA.verts[0] = new vec2(0, 100);
-			polygonA.verts[1] = new vec2(0, 0);
+			polygonA.verts[0] = new vec2(0, -50);
+			polygonA.verts[1] = new vec2(0, 50);
 
 			polygonB.verts = [];
 			polygonB.verts[0] = new vec2(0, 0);
 			break;
 		case 1: // Triangle vs Point
 			polygonA.verts = [];
-			polygonA.verts[0] = new vec2(50, 0);
-			polygonA.verts[1] = new vec2(0, 80);
-			polygonA.verts[2] = new vec2(-50, 0);
+			polygonA.verts[0] = new vec2(50, -40);
+			polygonA.verts[1] = new vec2(0, 40);
+			polygonA.verts[2] = new vec2(-50, -40);
 
 			polygonB.verts = [];
 			polygonB.verts[0] = new vec2(0, 0);
 			break;
 		case 2: // Line segment vs Line segment
 			polygonA.verts = [];
-			polygonA.verts[0] = new vec2(0, 100);
-			polygonA.verts[1] = new vec2(0, 0);
+			polygonA.verts[0] = new vec2(0, -50);
+			polygonA.verts[1] = new vec2(0, 50);
 
 			polygonB.verts = [];
 			polygonB.verts[0] = new vec2(50, 0);
@@ -105,9 +105,9 @@ App = function() {
 			break;
 		case 3: // Triangle vs Line segment
 			polygonA.verts = [];
-			polygonA.verts[0] = new vec2(50, 0);
-			polygonA.verts[1] = new vec2(0, 80);
-			polygonA.verts[2] = new vec2(-50, 0);
+			polygonA.verts[0] = new vec2(50, -40);
+			polygonA.verts[1] = new vec2(0, 40);
+			polygonA.verts[2] = new vec2(-50, -40);
 			
 			polygonB.verts = [];
 			polygonB.verts[0] = new vec2(50, 0);
@@ -115,42 +115,42 @@ App = function() {
 			break;
 		case 4: // Triangle vs Triangle
 			polygonA.verts = [];
-			polygonA.verts[0] = new vec2(50, 0);
-			polygonA.verts[1] = new vec2(0, 80);
-			polygonA.verts[2] = new vec2(-50, 0);
+			polygonA.verts[0] = new vec2(50, -40);
+			polygonA.verts[1] = new vec2(0, 40);
+			polygonA.verts[2] = new vec2(-50, -40);
 			
 			polygonB.verts = [];
-			polygonB.verts[0] = new vec2(50, 0);
-			polygonB.verts[1] = new vec2(0, 80);
-			polygonB.verts[2] = new vec2(-50, 0);
+			polygonB.verts[0] = new vec2(50, -40);
+			polygonB.verts[1] = new vec2(0, 40);
+			polygonB.verts[2] = new vec2(-50, -40);
 			break;
 		case 5: // Box vs Box
 			polygonA.verts = [];
-			polygonA.verts[0] = new vec2(40, 0);
-			polygonA.verts[1] = new vec2(40, 80);
-			polygonA.verts[2] = new vec2(-40, 80);
-			polygonA.verts[3] = new vec2(-40, 0);
+			polygonA.verts[0] = new vec2(40, -40);
+			polygonA.verts[1] = new vec2(40, 40);
+			polygonA.verts[2] = new vec2(-40, 40);
+			polygonA.verts[3] = new vec2(-40, -40);
 			
 			polygonB.verts = [];
-			polygonB.verts[0] = new vec2(40, 0);
-			polygonB.verts[1] = new vec2(40, 80);
-			polygonB.verts[2] = new vec2(-40, 80);
-			polygonB.verts[3] = new vec2(-40, 0);
+			polygonB.verts[0] = new vec2(40, -40);
+			polygonB.verts[1] = new vec2(40, 40);
+			polygonB.verts[2] = new vec2(-40, 40);
+			polygonB.verts[3] = new vec2(-40, -40);
 			break;
 		case 6: // Box vs Hexagon
 			polygonA.verts = [];
-			polygonA.verts[0] = new vec2(40, 0);
-			polygonA.verts[1] = new vec2(40, 80);
-			polygonA.verts[2] = new vec2(-40, 80);
-			polygonA.verts[3] = new vec2(-40, 0);
+			polygonA.verts[0] = new vec2(40, -40);
+			polygonA.verts[1] = new vec2(40, 40);
+			polygonA.verts[2] = new vec2(-40, 40);
+			polygonA.verts[3] = new vec2(-40, -40);
 			
 			polygonB.verts = [];
-			polygonB.verts[0] = new vec2(30, 0);
-			polygonB.verts[1] = new vec2(60, 50);
-			polygonB.verts[2] = new vec2(30, 100);
-			polygonB.verts[3] = new vec2(-30, 100);
-			polygonB.verts[4] = new vec2(-60, 50);
-			polygonB.verts[5] = new vec2(-30, 0);			
+			polygonB.verts[0] = new vec2(30, -50);
+			polygonB.verts[1] = new vec2(60, 0);
+			polygonB.verts[2] = new vec2(30, 50);
+			polygonB.verts[3] = new vec2(-30, 50);
+			polygonB.verts[4] = new vec2(-60, 0);
+			polygonB.verts[5] = new vec2(-30, -50);			
 		}
 
 		mode = m;
