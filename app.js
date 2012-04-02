@@ -201,6 +201,32 @@ App = function() {
 		ctx.stroke();
 	}
 
+	function drawDashLine(p1, p2, lineWidth, dashSize, color) {
+		var dashSize2 = dashSize * 0.5;
+		var dsq = vec2.distsq(p1, p2);
+
+		var d = vec2.truncate(vec2.sub(p2, p1), dashSize);
+		var s1 = p1;
+		var s2 = vec2.add(p1, d);
+		
+		ctx.beginPath();
+
+		while (d.lengthsq() > 0) {
+			var s3 = vec2.add(s1, vec2.truncate(vec2.sub(s2, s1), dashSize2));
+
+			ctx.moveTo(s1.x, s1.y);
+			ctx.lineTo(s3.x, s3.y);
+
+			d = vec2.truncate(vec2.sub(p2, s2), dashSize);
+			s1 = s2;
+			s2 = vec2.add(s2, d);
+		}
+
+		ctx.lineWidth = lineWidth;
+		ctx.strokeStyle = color;
+		ctx.stroke();
+	}
+
 	function drawText(p, text, color) {
 		ctx.save();
 		ctx.setTransform(1, 0, 0, 1, 0, 0);
@@ -309,16 +335,24 @@ App = function() {
 			drawLine(vec2.zero, edgeHistory[edgeHistory.length - 1].dir, 1, "#F00");
 
 			if (showMinkDiff) {
+				/*var pl = [];
+				for (var edge = polytope.edgeHead; edge != polytope.edgeTail; edge = edge.next) {
+					var v1 = polytope.verts[edge.index1];
+					pl.push(v1.p);
+				}
+
+				drawPolygon(pl, new Transform(new vec2(0, 0), 0), 2, "#0F0", "rgba(0, 255, 0, 0.1)");*/
+
 				polytopeEdgeHistoryIndex %= edgeHistory.length;
 				var edge = edgeHistory[polytopeEdgeHistoryIndex];
 
 				// Draw polytope edge history
 				var v1 = polytope.verts[edge.index1];
 				var v2 = polytope.verts[edge.index2];
-				drawLine(v1.p, v2.p, 2, "#084");
+				drawDashLine(v1.p, v2.p, 1, 8, "#0A0");
 
 				// Draw closest point on edge
-				drawPoint(edge.dir, 3, "#0F0");
+				drawPoint(edge.dir, 2.5, "#0A0");
 
 				domInfo.innerHTML += ["<br />Polytope edge history:", polytopeEdgeHistoryIndex, "/", edgeHistory.length - 1].join(" ");
 			}
