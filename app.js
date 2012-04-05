@@ -332,10 +332,11 @@ App = function() {
 			var edgeHistory = result.edgeHistory;
 
 			var penetration = edgeHistory[edgeHistory.length - 1].dir;
-			// Check if EPA closest edge vector is zero or not
+			// Check if EPA closest edge vector is zero
 			if (vec2.dot(penetration, penetration) == 0) {
 				penetration.set(1, 0);
 			}
+
 			var n = vec2.normalize(penetration);
 			var info = computeContactPoints(polygonA, xfA, polygonB, xfB, vec2.neg(n));
 			var inc = info.incidentEdge;

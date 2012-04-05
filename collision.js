@@ -272,9 +272,9 @@ function doGJK(polygon1, xf1, polygon2, xf2) {
 	simplex.count = 1;
 	var v0 = simplex.verts[0];
 	//v0.index1 = 0;	
-	v0.index1 = supportPoint(polygon1, new vec2(-1, 0));
+	v0.index1 = supportPoint(polygon1, xf1.unrotate(new vec2(-1, 0)));
 	//v0.index2 = 0;
-	v0.index2 = supportPoint(polygon2, new vec2(1, 0));
+	v0.index2 = supportPoint(polygon2, xf2.unrotate(new vec2(1, 0)));
 	var localPoint1 = polygon1.verts[v0.index1];
 	var localPoint2 = polygon2.verts[v0.index2];
 	v0.p1 = xf1.transform(localPoint1);
@@ -435,12 +435,12 @@ Polytope.prototype.getClosestEdge = function() {
 
 		var v = -vec2.dot(ab, a);
 		if (v <= 0) {
-			cp = a;
+			cp = new vec2(a.x, a.y);
 		}
 		else {		
 			var u = vec2.dot(ab, b);
 			if (u <= 0) {
-				cp = b;
+				cp = new vec2(b.x, b.y);
 			}
 			else {
 				var s = 1 / ab.lengthsq();
@@ -463,12 +463,12 @@ Polytope.prototype.getClosestEdge = function() {
 
 			var v = -vec2.dot(ab, a);
 			if (v <= 0) {
-				cp = a;
+				cp = new vec2(a.x, a.y);
 			}
 			else {		
 				var u = vec2.dot(ab, b);
 				if (u <= 0) {
-					cp = b;
+					cp = new vec2(b.x, b.y);
 				}
 				else {
 					var s = 1 / ab.lengthsq();
