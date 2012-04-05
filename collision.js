@@ -431,9 +431,22 @@ Polytope.prototype.getClosestEdge = function() {
 		var a = this.verts[firstEdge.index1].p;
 		var b = this.verts[firstEdge.index2].p;
 		var ab = vec2.sub(b, a);
+		var cp;
+
 		var v = -vec2.dot(ab, a);
-		var s = 1 / ab.lengthsq();
-		var cp = vec2.lerp(a, b, v * s);
+		if (v <= 0) {
+			cp = a;
+		}
+		else {		
+			var u = vec2.dot(ab, b);
+			if (u <= 0) {
+				cp = b;
+			}
+			else {
+				var s = 1 / ab.lengthsq();
+				cp = vec2.lerp(a, b, v * s);
+			}
+		}
 
 		firstEdge.dir = cp;
 		firstEdge.distance = cp.lengthsq();		
@@ -446,9 +459,22 @@ Polytope.prototype.getClosestEdge = function() {
 			var a = this.verts[edge.index1].p;
 			var b = this.verts[edge.index2].p;
 			var ab = vec2.sub(b, a);
+			var cp;
+
 			var v = -vec2.dot(ab, a);
-			var s = 1 / ab.lengthsq();
-			var cp = vec2.lerp(a, b, v * s);
+			if (v <= 0) {
+				cp = a;
+			}
+			else {		
+				var u = vec2.dot(ab, b);
+				if (u <= 0) {
+					cp = b;
+				}
+				else {
+					var s = 1 / ab.lengthsq();
+					cp = vec2.lerp(a, b, v * s);
+				}
+			}
 
 			edge.dir = cp;
 			edge.distance = cp.lengthsq();		
@@ -494,6 +520,13 @@ function doEPA(polygon1, xf1, polygon2, xf2, simplex) {
 		edgeHistory.push(edge);
 
 		var d = edge.dir;
+
+		// Ensure the search direction non-zero.
+		if (vec2.dot(d, d) == 0) {
+			break;
+		}
+
+		// Compute new closest point to closest edge direction
 		var index1 = supportPoint(polygon1, xf1.unrotate(vec2.neg(d)));
 		var p1 = xf1.transform(polygon1.verts[index1]);
 		var index2 = supportPoint(polygon2, xf2.unrotate(d));
@@ -503,10 +536,12 @@ function doEPA(polygon1, xf1, polygon2, xf2, simplex) {
 		var v1 = v[edge.index1];
 		var v2 = v[edge.index2];
 
+		// Check for new point is already on a closest edge
 		if ((v1.index1 == index1 && v1.index2 == index2) || (v2.index1 == index1 && v2.index2 == index2)) {
 			break;
 		}
 		
+		// Add new polytope point and split the edge
 		var new_v = new SimplexVertex;
 		new_v.index1 = index1;
 		new_v.index2 = index2;
@@ -540,4 +575,120 @@ function doEPA(polygon1, xf1, polygon2, xf2, simplex) {
 	}
 
 	return { polytope: polytope, edgeHistory: edgeHistory };
+}
+
+ContactPoint = function(point, normal, depth) {
+	this.p = point.duplicate();
+	this.n = normal.duplicate();
+	this.d = depth;
+}
+
+// Find the separating edge for the given direction
+function findSeparationEdge(polygon, xf, n) {
+	var verts = polygon.verts;
+	var n_local = xf.unrotate(n);
+	var index = supportPoint(polygon, n_local);	
+
+	var index_prev = (index + verts.length - 1) % verts.length;
+	var index_next = (index + 1) % verts.length;
+
+	var v = verts[index];
+	var v_prev = verts[index_prev];
+	var v_next = verts[index_next];
+	var l = vec2.sub(v, v_next);
+	var r = vec2.sub(v, v_prev);
+
+	var edge = {};
+
+	if (vec2.dot(r, n_local) <= vec2.dot(l, n_local)) {		
+		edge.v1 = xf.transform(v_prev);
+		edge.v2 = xf.transform(v);
+		return edge;
+	}
+
+	edge.v1 = xf.transform(v);
+	edge.v2 = xf.transform(v_next);
+	return edge;
+}
+
+function clipLineSegment(v1, v2, n, o) {
+	var d1 = vec2.dot(n, v1) - o;
+	var d2 = vec2.dot(n, v2) - o;
+	var cp = [];
+
+	if (d1 >= 0) {
+		cp.push(v1);
+	}
+
+	if (d2 >= 0) {
+		cp.push(v2);
+	}
+
+	if (d1 * d2 < 0) {
+		var delta = vec2.sub(v2, v1);
+		var p = vec2.add(v1, vec2.scale(delta, d1 / (d1 - d2)));
+		cp.push(p);
+	}
+
+	return cp;
+}
+
+function computeContactPoints(polygon1, xf1, polygon2, xf2, n) {
+	var e1 = findSeparationEdge(polygon1, xf1, n);
+	var e2 = findSeparationEdge(polygon2, xf2, vec2.neg(n));
+
+	var e1d = vec2.sub(e1.v2, e1.v1);
+	var e2d = vec2.sub(e2.v2, e2.v1);
+
+	var ref, ref_n;
+	var inc;
+	var flip;
+
+ 	// The reference edge is the edge most perpendicular to the separation normal.
+ 	// So as to separate both polygons as little as possible.
+ 	var en1 = Math.abs(vec2.dot(e1d, n));
+ 	var en2 = Math.abs(vec2.dot(e2d, n));
+	if (en1 <= en2) {
+		ref = e1;
+		ref_n = vec2.normalize(e1d);
+		inc = e2;
+		flip = true;
+	}
+	else {
+		ref = e2;
+		ref_n = vec2.normalize(e2d);
+		inc = e1;
+		flip = false;
+	}
+
+	// Clip incident edge vertices using reference edge v1
+	var o1 = vec2.dot(ref_n, ref.v1);
+	var v = clipLineSegment(inc.v1, inc.v2, ref_n, o1);
+	if (v.length < 2) {
+		return [];
+	}
+
+	// Clip incident edge vertices using reference edge v2
+	var o2 = -vec2.dot(ref_n, ref.v2);
+	var v = clipLineSegment(v[0], v[1], vec2.neg(ref_n), o2);
+	if (v.length < 2) {
+		return [];
+	}
+
+	var ref_perp = vec2.perp(ref_n);
+
+	var cp = [];
+	var o3 = vec2.dot(ref_perp, ref.v1);
+	var depth0 = vec2.dot(ref_perp, v[0]) - o3;
+	var depth1 = vec2.dot(ref_perp, v[1]) - o3;
+
+	if (depth0 > 0) {
+		cp.push(new ContactPoint(v[0], n, -depth0));
+	}
+
+	if (depth1 > 0) {
+		cp.push(new ContactPoint(v[1], n, -depth1));
+	}
+
+	return { cp: cp, incidentEdge: inc, referenceEdge: ref };
 }

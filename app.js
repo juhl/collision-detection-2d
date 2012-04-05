@@ -66,13 +66,13 @@ App = function() {
 
 	function getModeName() {
 		return [
-			"Line segment VS Point",
-			"Triangle VS Point",
-			"Line segment VS Line segment",
-			"Triangle VS Line segment",
-			"Triangle VS Triangle",
-			"Box VS Box",
-			"Box VS Hexagon"][mode];
+			"Demo1: Line segment vs Point",
+			"Demo2: Triangle vs Point",
+			"Demo3: Line segment vs Line segment",
+			"Demo4: Triangle vs Line segment",
+			"Demo5: Triangle vs Triangle",
+			"Demo6: Box vs Box",
+			"Demo7: Box vs Hexagon"][mode];
 	}
 
 	function setMode(m) {
@@ -274,9 +274,9 @@ App = function() {
 
 		if (vec2.distsq(w.p1, w.p2) > 0) {
 			// Draw closest line
-			drawLine(w.p1, w.p2, 1, "#F80");
-			drawPoint(w.p1, 2.5, "#F80");
-			drawPoint(w.p2, 2.5, "#F80");
+			drawLine(w.p1, w.p2, 1, "#7A0");
+			drawPoint(w.p1, 2.5, "#7A0");
+			drawPoint(w.p2, 2.5, "#7A0");
 		}
 
 		if (showMinkDiff) {
@@ -331,8 +331,26 @@ App = function() {
 			var polytope = result.polytope;
 			var edgeHistory = result.edgeHistory;
 
-			// Draw penetration vector
-			drawLine(vec2.zero, edgeHistory[edgeHistory.length - 1].dir, 1, "#F00");
+			var penetration = edgeHistory[edgeHistory.length - 1].dir;
+			// Check if EPA closest edge vector is zero or not
+			if (vec2.dot(penetration, penetration) == 0) {
+				penetration.set(1, 0);
+			}
+			var n = vec2.normalize(penetration);
+			var info = computeContactPoints(polygonA, xfA, polygonB, xfB, vec2.neg(n));
+			var inc = info.incidentEdge;
+			var ref = info.referenceEdge;
+			var cp = info.cp;
+
+			drawLine(inc.v1, inc.v2, 2, "#EA0");
+			drawLine(ref.v1, ref.v2, 2, "#08E");
+
+			for (var i = 0; i < cp.length; i++) {
+				var p1 = cp[i].p;
+				var p2 = vec2.add(p1, vec2.scale(cp[i].n, cp[i].d));
+				drawLine(p1, p2, 2, "#F00");
+				drawPoint(p1, 2.5, "#F00");
+			}
 
 			if (showMinkDiff) {
 				/*var pl = [];
@@ -349,7 +367,7 @@ App = function() {
 				// Draw polytope edge history
 				var v1 = polytope.verts[edge.index1];
 				var v2 = polytope.verts[edge.index2];
-				drawDashLine(v1.p, v2.p, 1, 8, "#0A0");
+				drawDashLine(v1.p, v2.p, 2, 8, "#0C0");
 
 				// Draw closest point on edge
 				drawPoint(edge.dir, 2.5, "#0A0");
