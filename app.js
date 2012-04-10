@@ -31,12 +31,13 @@ App = function() {
 	var simplexHistoryIndex = 0;
 	var polytopeEdgeHistoryIndex = 0;
 	var showMinkDiff = false;
+	var showClipEdges = false;
 
 	function main() {		
 		domCanvas = document.getElementById("canvas");
 		if (!domCanvas.getContext) {
 			alert("Couldn't get canvas object !");
-		}		
+		}
 
 		// Main canvas context
 		ctx = domCanvas.getContext("2d");
@@ -348,8 +349,10 @@ App = function() {
 				var ref = info.referenceEdge;
 				var cp = info.cp;
 
-				drawLine(inc.v1, inc.v2, 2, "#EA0");
-				drawLine(ref.v1, ref.v2, 2, "#08E");
+				if (showClipEdges) {
+					drawLine(inc.v1, inc.v2, 2, "#EA0");
+					drawLine(ref.v1, ref.v2, 2, "#08E");
+				}
 
 				for (var i = 0; i < cp.length; i++) {
 					var p1 = cp[i].p;
@@ -443,6 +446,9 @@ App = function() {
 			break;
 		case 77: // 'm'
 			showMinkDiff = !showMinkDiff;
+			break;
+		case 67: // 'c'
+			showClipEdges = !showClipEdges;
 			break;
 		case 69: // 'e'
 			angle -= 5;
