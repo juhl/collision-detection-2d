@@ -251,12 +251,14 @@ App = function() {
 
 		ctx.setTransform(1, 0, 0, -1, domCanvas.width * 0.5, domCanvas.height * 0.5);
 
-		// Draw origin point
+		// Draw origin
 		drawPoint(vec2.zero, 2, "#000");
 
+		// Draw two polygons
 		drawPolygon(polygonA.verts, xfA, 1, "#888");
 		drawPolygon(polygonB.verts, xfB, 1, "#888");
 
+		// Draw indices of two polygons
 		for (var i = 0; i < polygonA.verts.length; i++) {
 			var v = xfA.transform(polygonA.verts[i]);
 			drawText(vec2.add(v, new vec2(-3, 3)), "" + i, "#888");
@@ -270,17 +272,18 @@ App = function() {
 		var simplexHistory = doGJK(polygonA, xfA, polygonB, xfB);
 		var lastIndex = simplexHistory.length - 1;
 		var lastSimplex = simplexHistory[lastIndex];
+		
+		// Draw closest line if they are not touching
 		var w = lastSimplex.getWitnessPoints();
-
 		if (vec2.distsq(w.p1, w.p2) > 0) {
-			// Draw closest line
 			drawLine(w.p1, w.p2, 1, "#7A0");
 			drawPoint(w.p1, 2.5, "#7A0");
 			drawPoint(w.p2, 2.5, "#7A0");
 		}
 
 		if (showMinkDiff) {
-			// Compute Minkowski Differences
+			// Compute the Minkowski differences
+			// Keep in mind that all the Minkowski difference convex hull vertices are in world space
 			var mdv = [];
 			for (var i = 0; i < polygonA.verts.length; i++) {
 				for (var j = 0; j < polygonB.verts.length; j++) {
@@ -292,18 +295,19 @@ App = function() {
 				}
 			}
 
-			// Generate convex hull
+			// Generate convex hull with convex hull generation algorithm
 			var mdv = createConvexHull(mdv);
 
+			// Draw Minkowski differences
+			drawPolygon(mdv, new Transform(new vec2(0, 0), 0), 2, "rgba(128, 0, 128, 0.5)", "rgba(128, 0, 128, 0.2)");
+
+			// Draw indices of the Minkowski difference convex hull
 			for (var i = 0; i < mdv.length; i++) {
 				var v = mdv[i];
 				drawText(vec2.add(v, new vec2(-22, 3)), v.text, "rgba(128, 0, 128, 0.5)");
 			}
-
-			// Draw Minkowski Differences
-			drawPolygon(mdv, new Transform(new vec2(0, 0), 0), 2, "rgba(128, 0, 128, 0.5)", "rgba(128, 0, 128, 0.2)");
-
-			// Draw simplex history
+			
+			// Draw the simplex
 			simplexHistoryIndex %= simplexHistory.length;
 			simplex = simplexHistory[simplexHistoryIndex];
 			var simplexVerts = [];
@@ -316,7 +320,7 @@ App = function() {
 
 			drawPolygon(simplexVerts, new Transform(new vec2(0, 0), 0), 2, "#F0F", "rgba(255, 0, 255, 0.3)");
 
-			// Draw closest point in current simplex history
+			// Draw closest point in the current simplex
 			var cp = simplex.getClosestPoint();
 			drawLine(vec2.add(cp, new vec2(-5, -5)), vec2.add(cp, new vec2(5, 5)), 1, "rgba(0, 0, 255, 0.5)");
 			drawLine(vec2.add(cp, new vec2(-5, 5)), vec2.add(cp, new vec2(5, -5)), 1, "rgba(0, 0, 255, 0.5)");
@@ -333,24 +337,26 @@ App = function() {
 
 			var penetration = edgeHistory[edgeHistory.length - 1].dir;
 			// Check if EPA closest edge vector is zero
-			if (vec2.dot(penetration, penetration) == 0) {
-				penetration.set(1, 0);
-			}
+			//if (vec2.dot(penetration, penetration) == 0) { // FIXME
+			//	penetration.set(1, 0);
+			//}
 
 			var n = vec2.normalize(penetration);
 			var info = computeContactPoints(polygonA, xfA, polygonB, xfB, vec2.neg(n));
-			var inc = info.incidentEdge;
-			var ref = info.referenceEdge;
-			var cp = info.cp;
+			if (info) {
+				var inc = info.incidentEdge;
+				var ref = info.referenceEdge;
+				var cp = info.cp;
 
-			drawLine(inc.v1, inc.v2, 2, "#EA0");
-			drawLine(ref.v1, ref.v2, 2, "#08E");
+				drawLine(inc.v1, inc.v2, 2, "#EA0");
+				drawLine(ref.v1, ref.v2, 2, "#08E");
 
-			for (var i = 0; i < cp.length; i++) {
-				var p1 = cp[i].p;
-				var p2 = vec2.add(p1, vec2.scale(cp[i].n, cp[i].d));
-				drawLine(p1, p2, 2, "#F00");
-				drawPoint(p1, 2.5, "#F00");
+				for (var i = 0; i < cp.length; i++) {
+					var p1 = cp[i].p;
+					var p2 = vec2.add(p1, vec2.scale(cp[i].n, cp[i].d));
+					drawLine(p1, p2, 2, "#F00");
+					drawPoint(p1, 2.5, "#F00");
+				}
 			}
 
 			if (showMinkDiff) {
@@ -369,9 +375,6 @@ App = function() {
 				var v1 = polytope.verts[edge.index1];
 				var v2 = polytope.verts[edge.index2];
 				drawDashLine(v1.p, v2.p, 2, 8, "#0C0");
-
-				// Draw closest point on edge
-				drawPoint(edge.dir, 2.5, "#0A0");
 
 				domInfo.innerHTML += ["<br />Polytope edge history:", polytopeEdgeHistoryIndex, "/", edgeHistory.length - 1].join(" ");
 			}

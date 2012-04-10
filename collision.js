@@ -205,7 +205,7 @@ Simplex.prototype.solve3 = function(q) {
 
 	// Region AB
 	var wabc = vec2.cross(aq, bq);
-	if (uab > 0 && vab > 0 && wabc * area <= 0) {
+	if (uab > 0 && vab > 0 && (wabc * area < 0 || area == 0)) {
 		this.count = 2;
 		this.verts[0].u = uab;
 		this.verts[1].u = vab;
@@ -215,7 +215,7 @@ Simplex.prototype.solve3 = function(q) {
 
 	// Region BC
 	var uabc = vec2.cross(bq, cq);
-	if (ubc > 0 && vbc > 0 && uabc * area <= 0) {
+	if (ubc > 0 && vbc > 0 && uabc * area < 0) {
 		this.count = 2;
 		this.verts[0].copy(this.verts[1]);
 		this.verts[1].copy(this.verts[2]);
@@ -227,7 +227,7 @@ Simplex.prototype.solve3 = function(q) {
 
 	// Region CA
 	var vabc = vec2.cross(cq, aq);
-	if (uca > 0 && vca > 0 && vabc * area <= 0) {
+	if (uca > 0 && vca > 0 && vabc * area < 0) {
 		this.count = 2;
 		this.verts[1].copy(this.verts[0]);
 		this.verts[0].copy(this.verts[2]);
@@ -368,27 +368,33 @@ Polytope = function(simplex) {
 		this.verts[i].copy(simplex.verts[i]);
 	}
 
-	var a = simplex.verts[0].p;
-	var b = simplex.verts[1].p;
-	var c = simplex.verts[2].p;
-
-	var ab = vec2.sub(b, a);
-	var bc = vec2.sub(c, b);
-
 	this.edgeHead = null;
 	this.edgeTail = null;
 
-	// Ensure the edge winding to counter-clockwise
-	if (vec2.cross(ab, bc) > 0) {
+	if (simplex.count == 2) {
 		this.insertEdge(this.edgeTail, new PolytopeEdge(0, 1));
-		this.insertEdge(this.edgeTail, new PolytopeEdge(1, 2));
-		this.insertEdge(this.edgeTail, new PolytopeEdge(2, 0));
-	}
-	else {
-		this.insertEdge(this.edgeTail, new PolytopeEdge(0, 2));
-		this.insertEdge(this.edgeTail, new PolytopeEdge(2, 1));
 		this.insertEdge(this.edgeTail, new PolytopeEdge(1, 0));
 	}
+	else if (simplex.count == 3) {
+		var a = simplex.verts[0].p;
+		var b = simplex.verts[1].p;
+		var c = simplex.verts[2].p;
+
+		var ab = vec2.sub(b, a);
+		var bc = vec2.sub(c, b);	
+
+		// Ensure the edge winding to CCW
+		if (vec2.cross(ab, bc) > 0) {
+			this.insertEdge(this.edgeTail, new PolytopeEdge(0, 1));
+			this.insertEdge(this.edgeTail, new PolytopeEdge(1, 2));
+			this.insertEdge(this.edgeTail, new PolytopeEdge(2, 0));
+		}
+		else {
+			this.insertEdge(this.edgeTail, new PolytopeEdge(0, 2));
+			this.insertEdge(this.edgeTail, new PolytopeEdge(2, 1));
+			this.insertEdge(this.edgeTail, new PolytopeEdge(1, 0));
+		}
+	}	
 }
 
 Polytope.prototype.insertEdge = function(prevEdge, newEdge) {
@@ -427,60 +433,64 @@ Polytope.prototype.deleteEdge = function(edge) {
 Polytope.prototype.getClosestEdge = function() {
 	var firstEdge = this.edgeHead;
 
-	if (firstEdge.distance == undefined) {
+	if (firstEdge.distsq == undefined) {
 		var a = this.verts[firstEdge.index1].p;
 		var b = this.verts[firstEdge.index2].p;
 		var ab = vec2.sub(b, a);
-		var cp;
 
 		var v = -vec2.dot(ab, a);
 		if (v <= 0) {
-			cp = new vec2(a.x, a.y);
+			var cp = new vec2(a.x, a.y);
+			firstEdge.distsq = cp.lengthsq();
+			firstEdge.dir = cp;			
 		}
 		else {		
 			var u = vec2.dot(ab, b);
 			if (u <= 0) {
-				cp = new vec2(b.x, b.y);
+				var cp = new vec2(b.x, b.y);
+				firstEdge.distsq = cp.lengthsq();
+				firstEdge.dir = cp;			
 			}
 			else {
 				var s = 1 / ab.lengthsq();
-				cp = vec2.lerp(a, b, v * s);
+				var cp = vec2.lerp(a, b, v * s);
+				firstEdge.distsq = cp.lengthsq();
+				firstEdge.dir = vec2.rperp(ab);
 			}
 		}
-
-		firstEdge.dir = cp;
-		firstEdge.distance = cp.lengthsq();		
 	}
 
 	var closestEdge = firstEdge;
 
 	for (var edge = firstEdge.next; edge != this.edgeHead; edge = edge.next) {
-		if (edge.distance == undefined) {
+		if (edge.distsq == undefined) {
 			var a = this.verts[edge.index1].p;
 			var b = this.verts[edge.index2].p;
 			var ab = vec2.sub(b, a);
-			var cp;
 
 			var v = -vec2.dot(ab, a);
 			if (v <= 0) {
-				cp = new vec2(a.x, a.y);
+				var cp = new vec2(a.x, a.y);
+				edge.distsq = cp.lengthsq();
+				edge.dir = cp;			
 			}
 			else {		
 				var u = vec2.dot(ab, b);
 				if (u <= 0) {
-					cp = new vec2(b.x, b.y);
+					var cp = new vec2(b.x, b.y);
+					edge.distsq = cp.lengthsq();
+					edge.dir = cp;		
 				}
 				else {
 					var s = 1 / ab.lengthsq();
 					cp = vec2.lerp(a, b, v * s);
+					edge.distsq = cp.lengthsq();
+					edge.dir = vec2.rperp(ab);
 				}
 			}
-
-			edge.dir = cp;
-			edge.distance = cp.lengthsq();		
 		}
 
-		if (edge.distance < closestEdge.distance) {
+		if (edge.distsq > 0.0001 && edge.distsq < closestEdge.distsq) {
 			closestEdge = edge;
 		}
 	}
@@ -665,14 +675,14 @@ function computeContactPoints(polygon1, xf1, polygon2, xf2, n) {
 	var o1 = vec2.dot(ref_n, ref.v1);
 	var v = clipLineSegment(inc.v1, inc.v2, ref_n, o1);
 	if (v.length < 2) {
-		return [];
+		return null;
 	}
 
 	// Clip incident edge vertices using reference edge v2
 	var o2 = -vec2.dot(ref_n, ref.v2);
 	var v = clipLineSegment(v[0], v[1], vec2.neg(ref_n), o2);
 	if (v.length < 2) {
-		return [];
+		return null;
 	}
 
 	var ref_perp = vec2.perp(ref_n);
